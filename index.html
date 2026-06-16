@@ -36,6 +36,10 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx    = canvas.getContext('2d');
 
+        // Make canvas fill the window
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
         // SHIP
         const ship = {
             x: canvas.width / 2,    // start at center
@@ -49,6 +53,13 @@
             size: 15                // ship size in pixels
         };
 
+        // BULLETS
+        const bullets = [];
+        const bulletSpeed = 500;    // pixels per second
+        const bulletLifetime = 1;   // seconds before bullet disappears
+        const shootCooldown = 0.25; // seconds between shots
+        let shootTimer =0;          // counts down t 0, then you can shoot again
+
         // INPUT
         const keys = {};
 
@@ -60,14 +71,10 @@
             keys[e.key] = false;
         });
 
-        // Make canvas fill the window
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
         // Resize canvas if window size changes
         window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvasheight = window.innerHeight;
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
         });
 
 
@@ -111,6 +118,35 @@
             if (ship.x > canvas.width)  ship.x = 0;
             if (ship.y < 0)             ship.y = canvas.height;
             if (ship.y > canvas.height) ship.y = 0;
+
+            // Shooting cooldown tick
+            shootTimer -= dt;
+
+            // Shoot on spacebar
+            if (keys[' '] && shootTimer <= 0) {
+                shoot();
+                shootTimer = shootCooldown;
+            }
+
+            // Update bullets
+            for (let i = bullets.length - 1; i >=0; i--) {
+                const b = bullets[i];
+
+                b.x += b.vx * dt;
+                b.y += b.vy * dt;
+                b.lifetime -= dt;
+
+                // Screen wrap for bullets
+                if (b.x < 0)             b.x = canvas.width;
+                if (b.x > canvas.width)  b.x = 0;
+                if (b.y < 0)             b.y = canvas.height;
+                if (b.y > canvas.height) b.y = 0;
+
+                // Remove dead bullets
+                if (b.lifetime <= 0) {
+                    bullets.splice(i, 1);
+                }
+            }
         }
 
         // DRAW
@@ -121,6 +157,9 @@
 
             // Draw ship
             drawShip();
+
+            // Draw bullets
+            drawBullets();
         }
 
         function drawShip() {
@@ -143,6 +182,26 @@
             ctx.stroke();
 
             ctx.restore(); // restore canvas state so other draws aren't affected
+        }
+
+        function drawBullets() {
+            ctx.fillStyle = '#fff';
+
+            for (const b of bullets) {
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, 3, 0, Math.PI * 2); // small circle with radius 3
+                ctx.fill();
+            }
+        }
+
+        function shoot() {
+            bullets.push({
+                x: ship.x + Math.cos(ship.angle) * ship.size,   // spawn at ship's nose
+                y: ship.y + Math.sin(ship.angle) * ship.size,
+                vx: Math.cos(ship.angle) * bulletSpeed,
+                vy: Math.sin(ship.angle) * bulletSpeed,
+                lifetime: bulletLifetime
+            });
         }
 
         // START
