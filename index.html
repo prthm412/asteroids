@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="widht=device-width, initial-scale=1.0" />
+    <title>Asteroids</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            background: #000;
+        }
+    </style>
+</head>
+
+<body>
+    
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        // SETUP
+        const canvas = document.getElementById('gameCanvas');
+        const ctx    = canvas.getContext('2d');
+
+
+        // Make canvas fill the window
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Resize canvas if window size changes
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvasheight = window.innerHeight;
+        });
+
+
+        // GAME LOOP
+        let lastTime = 0;
+
+        function gameLoop(timestamp) {
+            // Delta time: how many seconds passed since last frame
+            // This keeps speed consistent regardless of frame rate
+            const dt = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+
+            update(dt);
+            draw();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // UPDATE
+        function update(dt) {
+            // Game logic
+        }
+
+        // DRAW
+        function draw() {
+            // clear screen eachframe
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Fill with black background
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // START
+        requestAnimationFrame(gameLoop);
+
+    </script>
+
+</body>
+
+</html>
