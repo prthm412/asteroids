@@ -65,7 +65,7 @@
         const asteroidSizes = {
             large:  { radius: 50, speed: 60, score: 20 },
             medium: { radius: 25, speed: 100, score: 50 },
-            small:  { radisu: 12, speed: 150, score: 100 }
+            small:  { radius: 12, speed: 150, score: 100 }
         };
 
         // INPUT
@@ -153,6 +153,46 @@
                 // Remove dead bullets
                 if (b.lifetime <= 0) {
                     bullets.splice(i, 1);
+                }
+            }
+
+            // Bullets vs Asteroid collision
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const b = bullets[i];
+                let bulletHit = false;
+
+                for (let j = asteroids.length - 1; j >= 0; j--) {
+                    const a = asteroids[j];
+
+                    if (circleCollides(b.x, b.y, 3, a.x, a.y, a.radius)) {
+                        // Remove the asteroid
+                        asteroids.splice(j, 1);
+
+                        // Split into smaller ones
+                        if (a.sizeKey === 'large') {
+                            spawnAsteroid(a.x, a.y, 'medium');
+                            spawnAsteroid(a.x, a.y, 'medium');
+                        } if (a.sizeKey === 'medium') {
+                            spawnAsteroid(a.x, a.y, 'small');
+                            spawnAsteroid(a.x, a.y, 'small');
+                        }
+                        // small asteroids disappear
+
+                        bulletHit = true;
+                        break; // one bullet can only hit one asteroid
+                    }
+                }
+
+                if (bulletHit) {
+                    bullets.splice(i, 1); // remove the bullet that hit
+                }
+            }
+
+            // Ship vs Asteroid collision
+            for (const a of asteroids) {
+                if (circleCollides(ship.x, ship.y, ship.size * 0.8, a.x, a.y, a.radius)) {
+                    resetShip();
+                    break; // no need to check more asteroids this frame
                 }
             }
 
@@ -289,6 +329,21 @@
                 const pos = randomEdgePosition();
                 spawnAsteroid(pos.x, pos.y, 'large');
             }
+        }
+
+        function circleCollides(ax, ay, ar, bx, by, br) {
+            const dx = ax - bx;
+            const dy = ay - by;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            return dist < ar + br;
+        }
+
+        function resetShip() {
+            ship.x = canvas.width / 2;
+            ship.y = canvas.height / 2;
+            ship.vx = 0;
+            ship.vy = 0;
+            ship.angle = -Math.PI / 2;
         }
 
         spawnInitialAsteroids(5);
