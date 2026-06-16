@@ -36,6 +36,29 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx    = canvas.getContext('2d');
 
+        // SHIP
+        const ship = {
+            x: canvas.width / 2,    // start at center
+            y: canvas.height / 2,
+            angle: -Math.PI / 2,    // pointing straight up
+            vx: 0,                  // velocity x
+            vy: 0,                  // velocity y
+            thrust: 300,            // acceleration force
+            friction: 0.99,         // velocity dampening per frame (1 means no friction)
+            rotSpeed: 3,            // radians per second
+            size: 15                // ship size in pixels
+        };
+
+        // INPUT
+        const keys = {};
+
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+
+        window.addEventListener('keyup', (e) =>{
+            keys[e.key] = false;
+        });
 
         // Make canvas fill the window
         canvas.width = window.innerWidth;
@@ -65,17 +88,61 @@
 
         // UPDATE
         function update(dt) {
-            // Game logic
+            // Rotate left / right
+            if (keys['ArrowLeft'])  ship.angle -= ship.rotSpeed * dt;
+            if (keys['ArrowRight']) ship.angle += ship.rotSpeed * dt;
+
+            // Thrust forward
+            if (keys['ArrowUp']) {
+                ship.vx += Math.cos(ship.angle) * ship.thrust * dt;
+                ship.vy += Math.sin(ship.angle) * ship.thrust * dt;
+            }
+
+            // Apply friction (slows the ship down gradually)
+            ship.vx *= ship.friction;
+            ship.vy *= ship.friction;
+
+            // Move the ship
+            ship.x += ship.vx * dt;
+            ship.y += ship.vy * dt;
+
+            // Screen wrapping
+            if (ship.x < 0)             ship.x = canvas.width;
+            if (ship.x > canvas.width)  ship.x = 0;
+            if (ship.y < 0)             ship.y = canvas.height;
+            if (ship.y > canvas.height) ship.y = 0;
         }
 
         // DRAW
         function draw() {
-            // clear screen eachframe
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Fill with black background
+            // Clear screen
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw ship
+            drawShip();
+        }
+
+        function drawShip() {
+            ctx.save(); // save current canvas state
+
+            // Move canvas origin to ship position, then rotate
+            ctx.translate(ship.x, ship.y);
+            ctx.rotate(ship.angle);
+
+            // Draw the triangle
+            ctx.beginPath();
+            ctx.moveTo(ship.size, 0);                         // nose (front)
+            ctx.lineTo(-ship.size, -ship.size * 0.6);         // back left
+            ctx.lineTo(-ship.size * 0.5, 0);                  // inner back dip
+            ctx.lineTo(-ship.size, ship.size * 0.6);          // back right
+            ctx.closePath();
+
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.restore(); // restore canvas state so other draws aren't affected
         }
 
         // START
